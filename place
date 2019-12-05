@@ -1,0 +1,90 @@
+package ToInfinityAndBeyond.ZoneIteractionsPackage;
+
+import ToInfinityAndBeyond.SpacialPackage.*;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+
+public class Place implements Serializable{
+
+	private final String NAME_LOCATION;
+	private final String DESCRIPTION;
+        private final int IDPLACE;
+	private HashMap <String,Exit> MapOfExit;
+	private HashMap <String,Items> ListOfItems;
+	private HashMap <String,SpacialObject> ListOfEnemy;
+	
+        public Place(String name, String desc, int num) {
+            this.NAME_LOCATION = name;
+            this.DESCRIPTION = desc;
+            this.IDPLACE=num;
+            this.MapOfExit= new HashMap<>();
+            this.ListOfItems=new HashMap<>();
+            this.ListOfEnemy=new HashMap<>();
+	}
+        
+	public String getNameLocation() {
+            return this.NAME_LOCATION;
+	}
+
+	public String getDescription() {
+            return this.DESCRIPTION;
+	}
+        
+        public void setItems(HashMap<String, Items> _lesItems) throws CloneNotSupportedException {
+            for (Map.Entry<String, Items> entry : _lesItems.entrySet()) {
+                String key = entry.getKey();
+                Items value = entry.getValue();
+                this.ListOfItems.put(key, (Items) value.clone());
+            }
+	}
+        
+	public void addItem(Items _item) {
+            if(this.ListOfItems.containsKey(_item.getName()))
+                this.ListOfItems.get(_item.getName()).addQuatity(_item.getQuantity());
+            else
+                this.ListOfItems.put(_item.getName().toUpperCase(),_item);
+	}
+        
+        
+        
+	public Items removeItem(String nameItem) {
+            return this.ListOfItems.remove(nameItem);
+	}
+
+	public void addSpacialObject(Enemy _so) {
+            this.ListOfEnemy.put(_so.getNAME().toUpperCase(),_so);
+	}
+
+	public void removeSpacialObject(SpacialObject _so) {
+            this.ListOfEnemy.remove(_so.getNAME().toUpperCase(),_so);
+	}
+
+	public void addExit(Exit _exit) {
+            this.MapOfExit.put(_exit.getNextPlace().getNameLocation().toUpperCase(),_exit);
+	}
+
+	public HashMap<String, Exit> getMapofExit() {
+            return this.MapOfExit;
+	}
+
+	public Place goExit(String otherPlace) {
+            return this.MapOfExit.get(otherPlace).getNextPlace();
+	}
+
+	public HashMap<String, Items> getListOfItems() {
+            return this.ListOfItems;
+	}
+
+	public HashMap<String, SpacialObject> getListOfSO() {
+		return this.ListOfEnemy;
+	}
+
+        public int getID_Place() {
+            return IDPLACE;
+        }
+
+    public boolean enemyNearby() {
+             return !this.ListOfEnemy.isEmpty();
+    }
+}
