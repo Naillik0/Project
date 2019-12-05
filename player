@@ -1,0 +1,617 @@
+package ToInfinityAndBeyond.SpacialPackage;
+
+import ToInfinityAndBeyond.GameControlPackage.*;
+import ToInfinityAndBeyond.ZoneIteractionsPackage.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+
+
+
+public class Player extends SpacialObject implements Shoot {
+
+	private int repairKitUsed;
+	private int placeDiscover;
+	private final TextOutputForm tof;
+        private final static int priceUpgrade = 1;
+        private int totalDamageTaken;
+
+        
+        public Player(String name, int hp, int rank, HashMap<Integer, Weapons> tabWeapons, Storage inventory, Shield shield, int _fuelMeter,TextOutputForm _tof) {
+            super(name, hp, rank, tabWeapons, inventory, shield, _fuelMeter);
+            this.tof=_tof;
+            this.totalDamageTaken = 0;
+            this.placeDiscover = 0;
+            this.repairKitUsed = 0;
+        }
+
+	public void upRank() {
+            if(this.getRank() < 2){
+                HashMap<String,Items> Liste = this.getMyStorage().getListItems();
+                Items money = Liste.get("Credit");
+                if(money.getQuantity() < priceUpgrade){
+                tof.printLineText("Not enought money to upgrage your Spaceship");
+                }
+                else{
+                    tof.printLineText("Your Spaceship is level 2");
+                    this.setRank(2); 
+                    this.setMax_hp(this.getMax_hp()*2);
+                    this.addLife(this.getMax_hp());
+                    money.delQuantity(money.getQuantity()-priceUpgrade);
+                }
+            }
+            else{
+                tof.printLineText("Your SpaceShip is already lvl max !"); 
+                
+            }
+	}
+
+	public void UseThisItems(Items this_item) {
+            
+                HashMap<String,Items> liste = this.getMyStorage().getListItems();
+                this_item.useItemOn(this);
+                this_item.delQuantity(1);
+                liste.replace(this_item.getName().toUpperCase(), this_item);
+                this.getMyStorage().refresh(liste);
+                if("RepairKit".equals(this_item.getName()))
+                    repairKitUsed ++;
+                if(this_item.getQuantity() == 0)
+                    liste.remove(this_item.getName().toUpperCase(), this_item);
+                   
+        }
+
+	
+	public boolean haveThisItem(String thisItem){ 
+            HashMap<String,Items> liste = this.getMyStorage().getListItems();
+            return liste.containsKey(thisItem);
+	}
+
+	public void itemInStockage() {
+            HashMap<String,Items> liste = this.getMyStorage().getListItems();
+            if(!liste.isEmpty()){
+                tof.printLineText("In your storage you have : ");
+
+                liste.entrySet().stream().forEach((entrySet) -> {
+                    String key = entrySet.getKey();
+                    Items value = entrySet.getValue();
+                    tof.printLineText("     -"+ value.getQuantity() + " " + value.getName());
+                });
+           
+            }  else{
+                tof.printLineText("You have nothing in your stockage !");
+            }  
+        }
+
+        public void equipWeapon(Weapons w){
+            
+            if(this.getMapEquipedWeapons().size() < 2){   //Deux armes max mais on peut facilement augmenter la taille.
+                this.getMapEquipedWeapons().put((this.getMapEquipedWeapons().size() + 1), w);
+                this.getMyStorage().getListItems().remove(w.getName(), w);
+            }
+            else{
+                Scanner scan = new Scanner(System.in);
+                for(int i = 1; i < this.getMapEquipedWeapons().size(); i++){
+                    tof.printLineText(i + "You have :" + this.getMapEquipedWeapons().get(i).getName()); 
+
+                }
+                int answer = scan.nextInt();
+                while(answer != 1 || answer != 2){
+                tof.printLineText("Wich weapon want-you to unequip ? "); 
+                answer = scan.nextInt();
+                }
+                this.getMapEquipedWeapons().remove(answer);
+                this.getMapEquipedWeapons().put(answer, w);
+            }
+    }
+
+	public void unequipWeapons() {
+            Scanner scanUnequip = new Scanner(System.in);
+            for(int i = 1; i < this.getMapEquipedWeapons().size() + 1; i++){
+                tof.printLineText(i + " You have :" + this.getMapEquipedWeapons().get(i).getName());
+
+            }
+            tof.printLineText("Please enter the NUMBER of the weapon to change :");
+            int answer = scanUnequip.nextInt();
+            while(answer != 1 && answer != 2){
+            tof.printLineText("Wich weapon want-you to unequip ? ");
+            
+            answer = scanUnequip.nextInt();
+            }
+            tof.printLineText("You unEquip " +this.getMapEquipedWeapons().get(answer).getName()+ ".");
+            this.getMyStorage().getListItems().put(this.getMapEquipedWeapons().get(answer).getName(),this.getMapEquipedWeapons().get(answer));
+            this.getMapEquipedWeapons().remove(answer);
+        }
+
+	public Weapons selectWeapon() {
+            int nbWeapon=this.getMapEquipedWeapons().size();
+        
+            if(nbWeapon==0){
+                tof.printLineText("You can't shoot cause you don't have any weapon equiped !");
+                return null;           
+            }
+            else if(nbWeapon==1){
+                Scanner scan = new Scanner(System.in);
+                for(int i = 1; i < getMapEquipedWeapons().size() + 1; i++){
+                    tof.printLineText(i + " You have :" + getMapEquipedWeapons().get(i).getName()); 
+
+                }
+                String answer;
+                tof.printLineText("Wich weapon do-you want to use ? Please enter the NUMBER of the weapon. "); 
+                answer = scan.nextLine();
+                while(!"1".equals(answer)){
+                    tof.printLineText("The answer is incorrect ! Try another solution. "); 
+                    answer = scan.nextLine();
+                }
+                return getMapEquipedWeapons().get(Integer.parseInt(answer));
+            }
+            else{
+                Scanner scan = new Scanner(System.in);
+                for(int i = 1; i < getMapEquipedWeapons().size() + 1; i++){
+                    tof.printLineText(i + " You have :" + getMapEquipedWeapons().get(i).getName()); 
+
+                }
+                String answer;
+                tof.printLineText("Wich weapon do-you want to use ? Please enter the NUMBER of the weapon. "); 
+                answer = scan.nextLine();
+                while(!"1".equals(answer) && !"2".equals(answer)){
+                tof.printLineText("The answer is incorrect ! Try another solution. "); 
+                answer = scan.nextLine();
+                }
+                return getMapEquipedWeapons().get(Integer.parseInt(answer));
+            }
+	}
+
+        @Override
+        public void getHit(int damage,int damageShield,int damageOnHp){
+            this.totalDamageTaken += damage;
+            super.getHit(damage,damageShield,damageOnHp);
+        }
+
+        
+	public int getCredit() {
+            if(this.getMyStorage().getListItems().containsKey("Credit"))
+            {return this.getMyStorage().getListItems().get("Credit").getQuantity();}
+            else return 0;
+	}
+
+	public int getAllDamage() {
+            return this.totalDamageTaken;
+	}
+
+	public int getNumberRepairKit() {
+            return this.repairKitUsed;
+	
+	}
+
+	public int getNumberPlaceDiscover() {
+            return this.placeDiscover;
+	}
+
+	
+        @Override
+	public void useWeapon(Weapons thisWeapon, SpacialObject enemy) {
+            thisWeapon.useItemOn(enemy);
+            tof.printLineText("You hit. The " + enemy.getNAME() + " take " +thisWeapon.getDamage() + " damage.");
+            if(enemy.is_destroy()){
+                tof.printLineText("The " + enemy.getNAME() + " is destroy.");
+                enemy.getMyPlace().removeSpacialObject(enemy);
+            }
+        }
+
+	public boolean isOutOfFuel() {
+            return super.getFuelMeter() == 0 && !(this.getMyStorage().getListItems().containsKey("BarrelOfFuel"));
+            }
+          
+        
+        String Newligne=System.getProperty("line.separator");
+         
+        
+        private void go(){
+            Scanner scan = new Scanner(System.in);
+            String answer;
+            HashMap <String,Exit> MapOfExit = this.getMyPlace().getMapofExit();
+            tof.printLineText("There is "+ MapOfExit.size() + " exits : ");
+            int numExits = 0;
+            for(Map.Entry<String, Exit> thisExit : MapOfExit.entrySet()){
+                String key = thisExit.getKey();
+                Exit value = thisExit.getValue();
+                tof.printLineText(numExits + "     " + value.getNameNextPlace() + " (cost " + MapOfExit.get(key).getDistance() + " fuels )");
+                numExits++;
+            }
+            tof.printLineText("     cancel");
+            tof.printLineText("Wich place do-you want to go ? ");
+            answer = scan.nextLine();
+            answer = answer.toUpperCase();
+                
+            /*----------------------*/
+            boolean acceptNumber = false;
+                if (isInt(answer)) {
+                    if (Integer.parseInt(answer) < MapOfExit.size()) {
+                        acceptNumber = true;
+                    }
+                }
+            /*----------------------*/
+            if(acceptNumber)
+            {
+                int exitPos = Integer.parseInt(answer);
+                numExits = 0;
+                for(Map.Entry<String, Exit> thisExit : MapOfExit.entrySet()){
+                String key = thisExit.getKey();
+                //Exit value = thisExit.getValue();
+                if(numExits == exitPos)
+                {
+                        
+                    answer = key;
+                    break;
+                }
+                numExits++;
+                }  
+            }
+            
+
+            
+           while(!(MapOfExit.containsKey(answer)&& this.getFuelMeter() > MapOfExit.get(answer).getDistance()) && !"CANCEL".equals(answer))
+            {
+                    
+                if(!MapOfExit.containsKey(answer)){
+                    tof.printLineText("The name is incorrect"); 
+                }else if(this.getFuelMeter() < MapOfExit.get(answer).getDistance())
+                {
+                    tof.printLineText("You don't have enougth fuels. Try to use some barrelsOfFuels after 'cancel' your jump.");
+                }
+                    
+                answer = scan.nextLine();
+                answer = answer.toUpperCase();
+                acceptNumber = false;
+                if (isInt(answer)) {
+                    if (Integer.parseInt(answer) < MapOfExit.size()) {
+                        acceptNumber = true;
+                    }
+                }
+                    
+                if(acceptNumber)
+                {
+                    int exitPos = Integer.parseInt(answer);
+                    numExits = 0;
+                    for(Map.Entry<String, Exit> thisExit : MapOfExit.entrySet()){
+                    String key = thisExit.getKey();
+                    //Exit value = thisExit.getValue();
+                    if(numExits == exitPos)
+                    {
+                        answer = key;
+                        break;
+                    }
+                    numExits++;
+                    }  
+                }
+
+                    
+            }
+
+            if((!"CANCEL".equalsIgnoreCase(answer))){
+                this.setMyPlace(this.getMyPlace().goExit(answer));
+                this.delFuel(MapOfExit.get(answer).getDistance());
+                this.placeDiscover ++;
+            }
+                
+        }
+        
+        private void look(){
+            Scanner scanLook = new Scanner(System.in);
+            String LookSth;
+            tof.printLineText("What-did-you want to look ? " + Newligne + "       -Stockage" + Newligne + "       -Enemies" + Newligne + "       -Place" + Newligne + "       -nothing");
+            
+            LookSth = scanLook.nextLine();
+            LookSth = LookSth.toUpperCase();
+            while(!"STOCKAGE".equals(LookSth) && !"ENEMIES".equals(LookSth) && !"PLACE".equals(LookSth) && !"NOTHING".equals(LookSth)){
+                LookSth = scanLook.nextLine();
+                LookSth = LookSth.toUpperCase();
+                tof.printLineText("The answer is incorrect !");
+            }
+            if("STOCKAGE".equals(LookSth)){
+                this.itemInStockage();
+            }
+            else if("ENEMIES".equals(LookSth)){
+                HashMap <String,SpacialObject> ListOftargets;
+                ListOftargets = this.getMyPlace().getListOfSO();
+                if(ListOftargets.isEmpty()){
+                    tof.printLineText("There is no enemy.");
+                    return;
+                }
+                ListOftargets.entrySet().stream().forEach((entrySet) -> {
+                    String key = entrySet.getKey();
+                    SpacialObject value = entrySet.getValue();
+                    tof.printFormText(value.getNAME());
+                    tof.printLineText("     -" + value.getNAME());
+                });
+            }
+            else if("PLACE".equals(LookSth)){
+                HashMap <String,Items> mapItems = this.getMyPlace().getListOfItems();
+                if(!mapItems.isEmpty()){
+                    tof.printLineText("Arrond you there is : ");
+
+                    mapItems.entrySet().stream().forEach((entrySet) -> {
+                        String key = entrySet.getKey();
+                        Items value = entrySet.getValue();
+                        tof.printLineText("     -" +value.getQuantity()+ " " + value.getName());
+                    });
+                }
+                else{
+                    tof.printLineText("There is nothing arrond you");
+                }
+            }
+            else{
+                tof.printLineText("You do nothing.");
+            }
+               
+        }
+        private void use(){
+            if(!this.getMyStorage().getListItems().isEmpty()){
+                Scanner scanIventory = new Scanner(System.in);
+                tof.printLineText("Which item do-you want to use ?");
+                this.itemInStockage();
+                tof.printLineText("     -nothing");
+                String itemToUse = scanIventory.nextLine();
+                String ITEMTOUSE = itemToUse.toUpperCase();
+                while(!this.haveThisItem(ITEMTOUSE) && !"NOTHING".equals(ITEMTOUSE)){
+                    tof.printLineText("You don't have this item ! Try another item or nothing. ");
+                    itemToUse = scanIventory.nextLine();
+                    ITEMTOUSE = itemToUse.toUpperCase();
+                }
+                if(!"NOTHING".equals(ITEMTOUSE)){
+                    if(this.getMyStorage().getListItems().get(ITEMTOUSE).isIsUsable()){
+                        this.UseThisItems(this.getMyStorage().getListItems().get(ITEMTOUSE));
+                        tof.printLineText("You use " + itemToUse + ".");
+                    }
+                    else
+                        tof.printLineText(itemToUse + " isn't useable !");
+
+                }
+                else 
+                    tof.printLineText("You do nothing.");
+            }else{
+                tof.printLineText("You do nothing cause your stockage is empty !");
+            }  
+        }
+        
+        private void take(){
+            Scanner scan = new Scanner(System.in);
+            tof.printLineText("Wich item do-you want to take ?");
+            String answer2;
+            answer2 = scan.nextLine();
+            answer2 = answer2.toUpperCase();
+            while(!(this.getMyPlace().getListOfItems().containsKey(answer2)) && !"NOTHING".equals(answer2)){
+                tof.printLineText("This items isn't in the place. Try another solution or try 'nothing' !");
+                answer2 = scan.nextLine();
+                answer2 = answer2.toUpperCase();
+            }
+            if(!"NOTHING".equals(answer2)){
+                Items item = this.getMyPlace().removeItem(answer2);
+                if(this.getMyStorage().getListItems().containsKey(item.getName()))
+                    this.getMyStorage().getListItems().get(item.getName()).addQuatity(item.getQuantity());
+                else
+                   this.getMyStorage().addItem(item);
+            }   
+        
+      
+        }
+        private void drop() throws CloneNotSupportedException{
+            Scanner scan = new Scanner(System.in);
+            tof.printLineText("Wich item do-you want to drop ?");
+            this.itemInStockage();
+            tof.printLineText("     -nothing");
+            String answer3;
+            answer3 = scan.nextLine();
+            String answermin = answer3;
+            answer3 = answer3.toUpperCase();
+            while(!(this.getMyStorage().getListItems().containsKey(answer3)) && !"NOTHING".equals(answer3)){
+                tof.printLineText("This items isn't in the storage. Try another solution !");
+                answer3 = scan.nextLine();
+                answermin = answer3;
+                answer3 = answer3.toUpperCase();
+            }
+            if(!"NOTHING".equals(answer3)){
+                String nbOfDrop;
+                Items item2 = this.getMyStorage().getListItems().get(answer3);
+                Scanner scanNbOfDrop = new Scanner(System.in);
+                tof.printLineText("How many do-you want to drop ?");
+                    
+                nbOfDrop = scanNbOfDrop.nextLine(); 
+                boolean acceptNumber = false;
+                if (isInt(nbOfDrop)) {
+                    if (Integer.parseInt(nbOfDrop) < item2.getQuantity()) {
+                        acceptNumber = true;
+                    }
+                }      
+                    
+                while(!acceptNumber){ 
+                    tof.printLineText("The number is incorrect !");           
+                    nbOfDrop = scanNbOfDrop.nextLine(); 
+                    acceptNumber = false;
+                    if (isInt(nbOfDrop)) {
+                        if (Integer.parseInt(nbOfDrop) < item2.getQuantity()) {
+                            acceptNumber = true;
+                        }
+                    }    
+                    }
+                    
+                int intnbOfDrop = Integer.parseInt(nbOfDrop);
+                tof.printLineText("You drop "+ nbOfDrop + " "+ answermin +" in the space.");
+                if(intnbOfDrop == item2.getQuantity()){
+                    this.getMyStorage().getListItems().remove(item2.getName());
+                    this.getMyPlace().addItem(item2); 
+                }
+                else{
+                    this.getMyStorage().getListItems().get(item2.getName().toUpperCase()).delQuantity(intnbOfDrop);
+                    Items itemtmp = (Items) this.getMyStorage().getListItems().get(item2.getName().toUpperCase()).clone();
+                    itemtmp.setQuantity(intnbOfDrop);
+                this.getMyPlace().addItem(itemtmp);
+                }
+            }      
+        }
+	private void attack(){
+            Scanner scanTarget = new Scanner(System.in);
+            Weapons weapon;
+            SpacialObject target;
+            HashMap <String,SpacialObject> ListOftargets;
+            ListOftargets = this.getMyPlace().getListOfSO();
+            if(ListOftargets.isEmpty()){
+                tof.printLineText("There is no enemy.");
+                return;
+            }
+            ListOftargets.entrySet().stream().forEach((entrySet) -> {
+                String key = entrySet.getKey();
+                SpacialObject value = entrySet.getValue();
+                tof.printLineText("      -" + value.getNAME());
+            });
+               
+            tof.printLineText("Write a name target on this list or nothing :");
+            String targetName = scanTarget.nextLine();
+            targetName = targetName.toUpperCase();
+            while(!ListOftargets.containsKey(targetName) && (!"NOTHING".equals(targetName))){
+                tof.printLineText("The target is incorrect ! Enter a valid name or nothing");
+                targetName = scanTarget.nextLine();
+                targetName = targetName.toUpperCase();
+            }
+            if(!"NOTHING".equals(targetName)){
+                target = ListOftargets.get(targetName);
+                weapon = this.selectWeapon();
+                if(weapon!=null){
+                    this.useWeapon(weapon, (SpacialObject)target);
+                }
+            }
+        }
+
+        private void help(){
+            tof.printLineText("Fiche d'aide : ");
+            tof.printLineMid();
+            tof.printLineText("Command GO :      Allow  the player to go to another place ");
+            tof.printLineText("Command USE :     To use a item but not a weapon");
+            tof.printLineText("Command LOOK :    Show items on the place");
+            tof.printLineText("Command TAKE :    Take an item on the map");
+            tof.printLineText("Command ATTACK :  Shoot on a spatial object whith one of your weapon");
+            tof.printLineText("Command QUIT :    Quit the game");
+            tof.printLineText("Command DROP :    Drop an item on your current place");
+            tof.printLineText("Command UPGRADE : Upgrade your ship to have more hp");
+            tof.printLineMid();
+                
+        }
+        
+        public void weapon(){
+            
+            Scanner scanWeaponAnswer = new Scanner(System.in);
+            Scanner scanWeaponToEquipAnswer = new Scanner(System.in);
+            String WeaponAnswer;
+            String WeaponToEquipAnswer;
+            
+            tof.printLineText("Do you want to :" +  Newligne + "    -'Equip' a new weapon" + Newligne +"    -'UnEquip' a  weapon" + Newligne +"    -'Show' weapons equiped" +Newligne +"    - Do 'nothing'");
+            WeaponAnswer = scanWeaponAnswer.nextLine();
+            WeaponAnswer = WeaponAnswer.toUpperCase();
+            while(!("EQUIP".equals(WeaponAnswer)) && !("UNEQUIP".equals(WeaponAnswer)) && !("NOTHING".equals(WeaponAnswer)) && !("SHOW".equals(WeaponAnswer))){
+                tof.printLineText("The answer is incorrect !");
+                WeaponAnswer = scanWeaponAnswer.nextLine();
+                WeaponAnswer = WeaponAnswer.toUpperCase();
+            }
+            if(!"NOTHING".equals(WeaponAnswer)){
+                if("EQUIP".equals(WeaponAnswer)){
+                    this.itemInStockage();
+                    tof.printLineText("Enter the name of the weapon or 'nothing'.");
+                    WeaponToEquipAnswer = scanWeaponToEquipAnswer.nextLine();
+                    WeaponToEquipAnswer = WeaponToEquipAnswer.toUpperCase();
+                    while(!"NOTHING".equals(WeaponToEquipAnswer) && !this.getMyStorage().getListItems().containsKey(WeaponToEquipAnswer)){
+                        tof.printLineText("The answer is incorrect !");
+                        WeaponToEquipAnswer = scanWeaponToEquipAnswer.nextLine();
+                        WeaponToEquipAnswer = WeaponToEquipAnswer.toUpperCase();
+                    }
+                    if("NOTHING".equals(WeaponToEquipAnswer))
+                        tof.printLineText("You do nothing");
+                    else{
+                        Items weaponChose = this.getMyStorage().getListItems().get(WeaponToEquipAnswer);
+                        this.equipWeapon((Weapons)weaponChose);
+                    }
+                            
+                }
+                else if("UNEQUIP".equals(WeaponAnswer)){
+                    this.unequipWeapons();
+                }
+                else{
+                    tof.printLineText("The weapons equiped are : ");
+                    for(int i = 1; i < this.getMapEquipedWeapons().size()+1; i++){
+                    tof.printLineText(i + " " + this.getMapEquipedWeapons().get(i).getName()); 
+                    }
+                }
+                            
+            }       
+            else{
+               tof.printLineText("You do nothing");
+            }
+        }
+                
+        
+	public void doAction(String strAction) throws CloneNotSupportedException {
+            
+            Action thisAction = Action.HELP;
+            for (Action val : Action.values()) {
+                if(val.name().equalsIgnoreCase(strAction))thisAction = val;
+            }
+            
+            
+        switch(thisAction){
+            case GO:
+                this.go();
+                break;
+            
+            case USE:
+                this.use();
+                break;
+                
+            case LOOK: 
+                this.look();
+                break; 
+                
+            case TAKE:
+                this.take();
+                break;
+                
+                
+            case ATTACK:
+                this.attack();
+                break; 
+                
+            case DROP: 
+                this.drop();
+                break;
+                
+            case HELP: 
+                this.help();
+                break;
+                
+            case UPGRADE:
+                this.upRank();
+                break;
+                
+            case WEAPON:
+                this.weapon();
+                break;
+              
+            default : 
+                System.out.println("");
+                break;
+                
+            }
+        }
+
+    //Check for an input string is form of int
+    private boolean isInt(String val) {
+        try {
+            // checking valid integer using parseInt() method 
+            Integer.parseInt(val);
+            //System.out.println(val + " is a valid integer number"); 
+            return true;
+        } catch (NumberFormatException e) {
+            //System.out.println(val + " is not a valid integer number"); 
+            return false;
+        }
+    }
+
+}
