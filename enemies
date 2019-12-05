@@ -1,0 +1,49 @@
+package ToInfinityAndBeyond.SpacialPackage;
+
+import ToInfinityAndBeyond.ZoneIteractionsPackage.Items;
+import ToInfinityAndBeyond.ZoneIteractionsPackage.Place;
+import java.util.HashMap;
+
+public class Enemy extends SpacialObject implements Shoot {
+
+    public Enemy(String name, int hp, int rank, HashMap<Integer, Weapons> tabWeapons, Storage inventory, Shield shield, int _fuelMeter) {
+        super(name, hp, rank, tabWeapons, inventory, shield, _fuelMeter);
+    }
+
+    public void loseItems() {
+        //Place pl=;
+        HashMap<String,Items>enemyItems=this.getMyStorage().getListItems();
+        if(!enemyItems.isEmpty()){
+            enemyItems.entrySet().stream().forEach((entrySet) -> {
+                String key = entrySet.getKey();
+                Items value = entrySet.getValue();
+                if(!this.getMyPlace().getListOfItems().isEmpty() && this.getMyPlace().getListOfItems().containsKey(key))
+                    this.getMyPlace().getListOfItems().get(key).addQuatity(value.getQuantity());
+                else
+                    this.getMyPlace().addItem(value);
+            });     
+        }
+    }
+    
+
+    @Override
+    public void useWeapon(Weapons thisWeapon, SpacialObject target) {
+        int nbWeapon = this.getMapEquipedWeapons().size() -1;
+        int idweapon = (int)(Math.random()*nbWeapon);
+	if(this.getMapEquipedWeapons().get(idweapon).haveAmmo(this)){
+            this.getMapEquipedWeapons().get(idweapon).useItemOn(target);
+        }
+    }
+
+    @Override
+    public void getHit(int damage, int damageShield, int damageOnHp) {
+        super.getHit(damage, damageShield, damageOnHp); 
+        if(this.is_destroy()){
+            loseItems();
+            
+        }    
+        
+    }
+
+    
+}
