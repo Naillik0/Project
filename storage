@@ -1,0 +1,46 @@
+package ToInfinityAndBeyond.SpacialPackage;
+
+import ToInfinityAndBeyond.ZoneIteractionsPackage.*;
+import java.io.Serializable;
+import java.util.HashMap;
+
+public class Storage implements Serializable {
+
+    
+	
+    private int Capacity;
+    private final int CAPACITYMAX; //On ne l'utilisera pas.
+    private HashMap<String,Items> ListOfItems;
+
+    public Storage(int CapacityMax) {
+        this.Capacity = 0;
+        this.CAPACITYMAX = CapacityMax;
+        this.ListOfItems=new HashMap<>();
+    }
+
+    public boolean isFull() {
+        if(this.Capacity >= this.CAPACITYMAX);
+            return true;
+    }
+    
+    public void addItem(Items thisItem) {
+            ListOfItems.put(thisItem.getName().toUpperCase(),thisItem);
+            this.Capacity ++;
+    }
+
+    public void deleteItem(Items thisItem) {
+        this.ListOfItems.remove(thisItem.getName().toUpperCase(),thisItem);
+    }
+
+    public Items dropItem(Items thisItem) {
+	return this.ListOfItems.remove(thisItem.getName().toUpperCase());
+    }
+    
+    public HashMap<String,Items> getListItems(){
+        return this.ListOfItems;
+    }
+    
+    public void refresh(HashMap<String, Items> ListOfItems) {
+        this.ListOfItems = ListOfItems;
+    }
+}
